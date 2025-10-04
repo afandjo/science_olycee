@@ -7,21 +7,17 @@
 </head>
 <body class="bg-light">
 
-<div class="container mt-5">
+    <!-- Header -->
+    @include('admin.login.nav')
 
+<div class="container mt-5">
 
     <!-- Message de succès -->
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-        <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Tableau de bord Administrateur</h2>
-    <form method="POST" action="{{ route('admin.logout') }}" style="display:inline;">
-    @csrf
-    <button type="submit" class="btn btn-danger">Déconnexion</button>
-</form>
 
-</div>
+    <h2 class="mb-4">Tableau de bord Administrateur</h2>
 
     @if($users->isEmpty())
         <p class="text-center">Aucun utilisateur inscrit pour le moment.</p>
@@ -65,5 +61,9 @@
     @endif
 </div>
 
+    <!-- Footer -->
+    @include('admin.login.footer')
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

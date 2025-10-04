@@ -17,7 +17,7 @@
                     <img src="{{ asset('images/complexes.jpeg') }}" class="card-img-top" alt="Cours">
                     <div class="card-body text-center">
                         <h6 class="card-title">Chapitre {{ $i }}</h6>
-                        <a href="{{ route('paiement') }}" class="btn btn-primary mt-3">Voir plus</a>
+                        <a href="{{ route('paiement') }}" class="btn btn-primary mt-3">acheter</a>
                     </div>
                 </div>
             </div>

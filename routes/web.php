@@ -86,3 +86,13 @@ Route::middleware(['auth','is_admin'])->group(function(){
     // upload video for a chapter
     Route::post('/admin/chapters/{id}/upload-video', [ChapterController::class, 'uploadVideo'])->name('admin.chapters.uploadVideo');
 });
+
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
+    // Paiements validés pour un chapitre donné
+    Route::get('/paiements/valides/{chapitre}', [PaiementController::class, 'valides'])
+        ->name('paiements.valides');
+
+    // Paiements en attente
+    Route::get('/paiements/attente', [PaiementController::class, 'attente'])
+        ->name('paiements.attente');
+});

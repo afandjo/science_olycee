@@ -38,7 +38,6 @@ class PaiementController extends Controller
         return redirect()->route('attente')->with('success','Demande enregistrée — en attente de validation.');
     }
 
-    public function attente(){ return view('auth.attente'); }
 
     // Admin approve / reject
     public function approuver($id)
@@ -54,4 +53,31 @@ class PaiementController extends Controller
         $p->update(['statut'=>'rejete']);
         return back()->with('success','Paiement rejeté.');
     }
+    public function valides($chapitre)
+{
+    $paiements = \App\Models\Paiement::with('user','chapter')
+        ->where('chapter_id', $chapitre)
+        ->where('statut', 'approuve') // ✅ correction
+        ->get();
+
+    return view('admin.paiements.valides', compact('paiements', 'chapitre'));
+}
+
+public function attente()
+{
+    $paiements = \App\Models\Paiement::with('user','chapter')
+        ->where('statut', 'en_attente') // ✅ correction
+        ->get();
+
+    return view('admin.paiements.attente', compact('paiements'));
+}
+
+public function countByChapter()
+{
+    return \App\Models\Paiement::selectRaw('chapter_id, COUNT(*) as total')
+        ->where('statut', 'approuve') // ✅ correction
+        ->groupBy('chapter_id')
+        ->pluck('total', 'chapter_id');
+}
+
 }
