@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User; // <-- toujours ici, pas à l'intérieur de la classe
+use App\Models\Paiement;
+use App\Models\Chapter;
 
 class AdminController extends Controller
 {
@@ -41,9 +43,27 @@ class AdminController extends Controller
             return redirect()->route('admin.connexion')->with('error', 'Veuillez vous connecter d’abord.');
         }
 
-        // Récupérer tous les utilisateurs pour l'affichage
+        // Récupérer les données du tableau de bord
         $users = User::all();
-        return view('admin.home', compact('users'));
+        $usersCount = User::count();
+        $chaptersCount = Chapter::count();
+        $paiementsValides = Paiement::where('statut', 'approuve')->count();
+        $paiementsAttente = Paiement::where('statut', 'en_attente')->count();
+        $revenuTotal = Paiement::where('statut', 'approuve')->sum('montant');
+        $paiementsRecents = Paiement::with('user','chapter')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.home', compact(
+            'users',
+            'usersCount',
+            'chaptersCount',
+            'paiementsValides',
+            'paiementsAttente',
+            'revenuTotal',
+            'paiementsRecents'
+        ));
     }
 
     // Supprimer un utilisateur
@@ -74,15 +94,39 @@ class AdminController extends Controller
             'telephone' => 'required|string|max:20',
         ]);
 
-        $user->update($request->all());
+        $user->update($request->only(['nom','prenom','email','pays','telephone']));
 
         return redirect()->route('admin.home')->with('success', 'Utilisateur mis à jour avec succès ✅');
     }
 
+    // Déconnexion admin
     public function logout()
-{
-    session()->forget('admin'); // Supprime la session admin
-    return redirect()->route('admin.connexion')->with('success', 'Vous êtes déconnecté avec succès ✅');
-}
+    {
+        session()->forget('admin'); // Supprime la session admin
+        return redirect()->route('admin.connexion')->with('success', 'Vous êtes déconnecté avec succès ✅');
+    }
 
+    // Liste des utilisateurs (admin)
+    public function users(Request $request)
+    {
+        if (!session('admin')) {
+            return redirect()->route('admin.connexion')->with('error', 'Veuillez vous connecter d’abord.');
+        }
+
+        $query = User::query();
+
+        if ($search = $request->get('q')) {
+            $query->where(function($q) use ($search){
+                $q->where('nom','like',"%{$search}%")
+                  ->orWhere('prenom','like',"%{$search}%")
+                  ->orWhere('email','like',"%{$search}%")
+                  ->orWhere('pays','like',"%{$search}%")
+                  ->orWhere('telephone','like',"%{$search}%");
+            });
+        }
+
+        $users = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
+
+        return view('admin.utilisateurs', compact('users'));
+    }
 }

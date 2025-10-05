@@ -81,7 +81,6 @@ Route::middleware(['auth','is_admin'])->group(function(){
     })->name('admin.paiements');
 
     Route::post('/admin/paiements/{id}/approuver', [PaiementController::class, 'approuver'])->name('admin.paiements.approuver');
-    Route::post('/admin/paiements/{id}/rejeter', [PaiementController::class, 'rejeter'])->name('admin.paiements.rejeter');
 
     // upload video for a chapter
     Route::post('/admin/chapters/{id}/upload-video', [ChapterController::class, 'uploadVideo'])->name('admin.chapters.uploadVideo');
@@ -95,4 +94,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
     // Paiements en attente
     Route::get('/paiements/attente', [PaiementController::class, 'attente'])
         ->name('paiements.attente');
+
+    // Liste des utilisateurs (dashboard -> sidebar)
+    Route::get('/utilisateurs', [AdminController::class, 'users'])->name('admin.utilisateurs');
 });

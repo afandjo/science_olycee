@@ -16,8 +16,8 @@
         <div class="card shadow-sm">
           <img src="{{ asset('images/complexes.jpeg') }}" class="card-img-top" alt="chapitre">
           <div class="card-body text-center">
-            <h6 class="card-title">{{ $chapter->titre }}</h6> <!-- ✅ Correction ici -->
-
+            <h6 class="card-title">{{ $chapter->title }}</h6> <!-- ✅ Correction ici -->
+           
             <!-- T-Money -->
             <a href="tel:*145*1*1*91399753*10000%23"
                class="btn btn-warning btn-sm m-1"
