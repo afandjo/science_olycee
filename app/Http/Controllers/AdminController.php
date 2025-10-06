@@ -37,32 +37,62 @@ class AdminController extends Controller
     }
 
     // Page admin
-    public function index()
+    public function index(Request $request)
     {
         if (!session('admin')) {
             return redirect()->route('admin.connexion')->with('error', 'Veuillez vous connecter d’abord.');
         }
 
-        // Récupérer les données du tableau de bord
-        $users = User::all();
+        $tab = $request->get('tab', 'overview');
+
+        $users = collect();
         $usersCount = User::count();
         $chaptersCount = Chapter::count();
         $paiementsValides = Paiement::where('statut', 'approuve')->count();
         $paiementsAttente = Paiement::where('statut', 'en_attente')->count();
         $revenuTotal = Paiement::where('statut', 'approuve')->sum('montant');
-        $paiementsRecents = Paiement::with('user','chapter')
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
+        $paiementsRecents = collect();
+        $chapters = collect(); // éviter compact() variable indéfinie
+
+        if ($tab === 'overview') {
+            $paiementsRecents = Paiement::with('user','chapter')
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get();
+        } elseif ($tab === 'utilisateurs') {
+            // Liste des utilisateurs avec recherche et pagination
+            $query = User::query();
+            $search = $request->get('q');
+            if ($search) {
+                $query->where(function($q) use ($search){
+                    $q->where('nom','like',"%{$search}%")
+                      ->orWhere('prenom','like',"%{$search}%")
+                      ->orWhere('email','like',"%{$search}%")
+                      ->orWhere('pays','like',"%{$search}%")
+                      ->orWhere('telephone','like',"%{$search}%");
+                });
+            }
+            $users = $query->orderByDesc('created_at')->paginate(10)->appends(['tab' => 'utilisateurs', 'q' => $search]);
+        } elseif ($tab === 'chapitres') {
+            // Liste des chapitres avec recherche par titre et pagination
+            $cQuery = Chapter::query();
+            $cSearch = $request->get('q');
+            if ($cSearch) {
+                $cQuery->where('title', 'like', "%{$cSearch}%");
+            }
+            $chapters = $cQuery->orderBy('id')->paginate(10)->appends(['tab' => 'chapitres', 'q' => $cSearch]);
+        }
 
         return view('admin.home', compact(
+            'tab',
             'users',
             'usersCount',
             'chaptersCount',
             'paiementsValides',
             'paiementsAttente',
             'revenuTotal',
-            'paiementsRecents'
+            'paiementsRecents',
+            'chapters'
         ));
     }
 

@@ -13,10 +13,16 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->is_admin) {
+        // Autoriser si admin connecté via session custom
+        if (session('admin') === true) {
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'Accès réservé aux administrateurs.');
+        // Ou via un utilisateur authentifié portant le flag is_admin
+        if (auth()->check() && (property_exists(auth()->user(), 'is_admin') ? auth()->user()->is_admin : false)) {
+            return $next($request);
+        }
+
+        return redirect()->route('admin.connexion')->with('error', 'Accès réservé aux administrateurs.');
     }
 }

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Chapter;
+use App\Models\Paiement;
 
 class AuthController extends Controller
 {
@@ -74,6 +76,18 @@ public function login(Request $request)
 
 
 
-    
+    // Page des cours/chapitres visibles pour l'utilisateur connecté
+    public function page(Request $request)
+    {
+        // liste des chapitres
+        $chapters = Chapter::orderBy('id')->get();
+        // chapitres déjà payés (approuvés) pour l'utilisateur
+        $paidChapterIds = Paiement::where('user_id', auth()->id())
+            ->where('statut', 'approuve')
+            ->pluck('chapter_id')
+            ->toArray();
+
+        return view('auth.page', compact('chapters', 'paidChapterIds'));
+    }
 
 }

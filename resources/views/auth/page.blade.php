@@ -25,25 +25,35 @@
         <span class="text-primary">Clique sur “Acheter” pour accéder au contenu complet.</span>
     </p>
 
+    @php($preview = request()->boolean('test') || (session('admin') === true) || app()->environment('local'))
     <div class="row">
-        @for($i = 1; $i <= 10; $i++)
+        @forelse(($chapters ?? []) as $c)
             <div class="col-md-3 mb-4">
                 <div class="card shadow-sm h-100">
                     <img src="{{ asset('images/complexes.jpeg') }}" class="card-img-top" alt="Cours">
                     <div class="card-body text-center">
                         <h6 class="card-title mb-2">
-                            <i class="bi bi-book"></i> Chapitre {{ $i }}
+                            <i class="bi bi-book"></i> {{ $c->title ?? ('Chapitre #'.$c->id) }}
                         </h6>
                         <p class="card-text text-muted small">
                             Concepts clés, exercices et exemples pour progresser.
                         </p>
-                        <a href="{{ route('paiement') }}" class="btn btn-primary btn-buy mt-2">
-                            <i class="bi bi-cart"></i> Acheter
-                        </a>
+                        @php($paid = in_array($c->id, $paidChapterIds ?? []))
+                        @if($preview || $paid)
+                            <a href="{{ $preview ? route('chapitre.show', [$c->id, 'test'=>1]) : route('chapitre.show', $c->id) }}" class="btn btn-success mt-2">
+                                <i class="bi bi-unlock"></i> Accéder
+                            </a>
+                        @else
+                            <a href="{{ route('paiement', ['chapter' => $c->id]) }}" class="btn btn-primary btn-buy mt-2">
+                                <i class="bi bi-cart"></i> Acheter
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
-        @endfor
+        @empty
+            <div class="col-12 text-center text-muted py-5">Aucun chapitre disponible pour le moment.</div>
+        @endforelse
     </div>
 </div>
 

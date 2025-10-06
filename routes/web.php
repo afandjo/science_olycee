@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function(){
 });
 
 
-Route::middleware(['auth','is_admin'])->group(function(){
+Route::middleware(['is_admin'])->group(function(){
     Route::get('/admin/paiements', function(){
         $paiements = \App\Models\Paiement::with('user','chapter')->get();
         return view('admin.paiements', compact('paiements'));
@@ -86,15 +86,19 @@ Route::middleware(['auth','is_admin'])->group(function(){
     Route::post('/admin/chapters/{id}/upload-video', [ChapterController::class, 'uploadVideo'])->name('admin.chapters.uploadVideo');
 });
 
-Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
+Route::middleware(['is_admin'])->prefix('admin')->group(function () {
     // Paiements validés pour un chapitre donné
     Route::get('/paiements/valides/{chapitre}', [PaiementController::class, 'valides'])
         ->name('paiements.valides');
 
-    // Paiements en attente
     Route::get('/paiements/attente', [PaiementController::class, 'attente'])
         ->name('paiements.attente');
 
     // Liste des utilisateurs (dashboard -> sidebar)
     Route::get('/utilisateurs', [AdminController::class, 'users'])->name('admin.utilisateurs');
+
+    // Chapitres CRUD (actions depuis l'onglet du dashboard)
+    Route::post('/chapitres', [ChapterController::class, 'adminStore'])->name('admin.chapitres.store');
+    Route::post('/chapitres/{id}', [ChapterController::class, 'adminUpdate'])->name('admin.chapitres.update');
+    Route::delete('/chapitres/{id}', [ChapterController::class, 'adminDestroy'])->name('admin.chapitres.destroy');
 });
