@@ -220,6 +220,7 @@
                                                     <div class="mt-2">
                                                         <form method="post" action="{{ route('admin.chapitres.update', $c->id) }}" enctype="multipart/form-data" class="row g-2 text-start">
                                                             @csrf
+                                                            @method('PUT')
                                                             <div class="col-md-5">
                                                                 <input type="text" name="title" value="{{ $c->title }}" class="form-control form-control-sm" required>
                                                             </div>

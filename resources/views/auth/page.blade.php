@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mes Cours</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -25,10 +26,10 @@
         <span class="text-primary">Clique sur “Acheter” pour accéder au contenu complet.</span>
     </p>
 
-    @php($preview = request()->boolean('test') || (session('admin') === true) || app()->environment('local'))
+    @php($preview = true) {{-- Forcer l'accès test via le bouton Accéder --}}
     <div class="row">
         @forelse(($chapters ?? []) as $c)
-            <div class="col-md-3 mb-4">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
                 <div class="card shadow-sm h-100">
                     <img src="{{ asset('images/complexes.jpeg') }}" class="card-img-top" alt="Cours">
                     <div class="card-body text-center">
@@ -38,16 +39,14 @@
                         <p class="card-text text-muted small">
                             Concepts clés, exercices et exemples pour progresser.
                         </p>
-                        @php($paid = in_array($c->id, $paidChapterIds ?? []))
-                        @if($preview || $paid)
-                            <a href="{{ $preview ? route('chapitre.show', [$c->id, 'test'=>1]) : route('chapitre.show', $c->id) }}" class="btn btn-success mt-2">
-                                <i class="bi bi-unlock"></i> Accéder
-                            </a>
-                        @else
-                            <a href="{{ route('paiement', ['chapter' => $c->id]) }}" class="btn btn-primary btn-buy mt-2">
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <a href="{{ route('paiement', ['chapter' => $c->id]) }}" class="btn btn-primary btn-buy">
                                 <i class="bi bi-cart"></i> Acheter
                             </a>
-                        @endif
+                            <a href="{{ route('chapitre.show', [$c->id, 'test'=>1]) }}" class="btn btn-outline-success">
+                                <i class="bi bi-unlock"></i> Accéder
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,4 +57,5 @@
 </div>
 
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>

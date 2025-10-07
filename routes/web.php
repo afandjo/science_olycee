@@ -38,7 +38,7 @@ Route::get('/admin/connexion', [AdminController::class, 'showLogin'])->name('adm
 Route::post('/admin/connexion', [AdminController::class, 'login'])->name('admin.login');
 
 // Page admin (protégée)
-Route::get('/admin', [AdminController::class, 'index'])->name('admin.home');
+Route::get('/admin', [AdminController::class, 'index'])->middleware(['web','is_admin'])->name('admin.home');
 
 
 // Supprimer un utilisateur
@@ -55,12 +55,8 @@ Route::put('/admin/users/{id}', [AdminController::class, 'update'])->name('admin
 Route::post('/admin/deconnexion', [AdminController::class, 'logout'])->name('admin.logout');
 
 
-Route::get('/auth/page', function () {
-    return view('auth.page');
-})->name('auth.page');
-
-
-Route::get('/home', [AuthController::class, 'page'])->middleware('auth')->name('auth.page');
+// Page des cours/chapitres (publique) — reliée au contrôleur pour charger les données
+Route::get('/home', [AuthController::class, 'page'])->name('auth.page');
 
 
 // Paiement + chapitres
@@ -74,7 +70,7 @@ Route::middleware('auth')->group(function(){
 });
 
 
-Route::middleware(['is_admin'])->group(function(){
+Route::middleware(['web','is_admin'])->group(function(){
     Route::get('/admin/paiements', function(){
         $paiements = \App\Models\Paiement::with('user','chapter')->get();
         return view('admin.paiements', compact('paiements'));
@@ -86,7 +82,7 @@ Route::middleware(['is_admin'])->group(function(){
     Route::post('/admin/chapters/{id}/upload-video', [ChapterController::class, 'uploadVideo'])->name('admin.chapters.uploadVideo');
 });
 
-Route::middleware(['is_admin'])->prefix('admin')->group(function () {
+Route::middleware(['web','is_admin'])->prefix('admin')->group(function () {
     // Paiements validés pour un chapitre donné
     Route::get('/paiements/valides/{chapitre}', [PaiementController::class, 'valides'])
         ->name('paiements.valides');
@@ -99,6 +95,6 @@ Route::middleware(['is_admin'])->prefix('admin')->group(function () {
 
     // Chapitres CRUD (actions depuis l'onglet du dashboard)
     Route::post('/chapitres', [ChapterController::class, 'adminStore'])->name('admin.chapitres.store');
-    Route::post('/chapitres/{id}', [ChapterController::class, 'adminUpdate'])->name('admin.chapitres.update');
+    Route::put('/chapitres/{id}', [ChapterController::class, 'adminUpdate'])->name('admin.chapitres.update');
     Route::delete('/chapitres/{id}', [ChapterController::class, 'adminDestroy'])->name('admin.chapitres.destroy');
 });

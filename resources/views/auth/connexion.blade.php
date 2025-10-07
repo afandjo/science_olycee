@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion - Plateforme Maths</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,8 +16,8 @@
 <body>
 
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
+    <div class="row justify-content-center px-2">
+        <div class="col-12 col-md-8 col-lg-5">
             <div class="card shadow p-4">
                 <div class="text-center mb-4">
                     <span class="logo-maths">
@@ -64,4 +65,5 @@
 </div>
 
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>

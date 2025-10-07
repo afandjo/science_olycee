@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Inscription - Plateforme Maths</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,8 +16,8 @@
 <body>
 
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-7">
+    <div class="row justify-content-center px-2">
+        <div class="col-12 col-md-8 col-lg-7">
             <div class="card shadow p-4">
                 <div class="text-center mb-4">
                     <span class="logo-maths">
@@ -41,11 +42,11 @@
                     @csrf
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Nom</label>
                             <input type="text" name="nom" class="form-control" value="{{ old('nom') }}" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Prénom</label>
                             <input type="text" name="prenom" class="form-control" value="{{ old('prenom') }}" required>
                         </div>
@@ -57,11 +58,11 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Pays</label>
                             <input type="text" name="pays" class="form-control" value="{{ old('pays') }}" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Téléphone</label>
                             <input type="text" name="telephone" class="form-control" value="{{ old('telephone') }}" required>
                         </div>
@@ -78,11 +79,11 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Mot de passe</label>
                             <input type="password" name="password" class="form-control" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Confirmer le mot de passe</label>
                             <input type="password" name="password_confirmation" class="form-control" required>
                         </div>
@@ -104,4 +105,5 @@
 </div>
 
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>
