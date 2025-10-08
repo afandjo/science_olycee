@@ -47,7 +47,7 @@
                                 <i class="bi bi-unlock"></i> Accéder
                             </a>
                         </div>
-                    </div>
+                    </div>+
                 </div>
             </div>
         @empty
