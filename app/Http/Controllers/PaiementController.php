@@ -21,7 +21,16 @@ class PaiementController extends Controller
             'methode' => 'required|string',
             'numero'  => 'required|string',
             'chapter_id' => 'required|integer|exists:chapters,id',
+            'receipt' => 'required|file|image|max:2048', // 2MB max, image only
         ]);
+
+        // Handle file upload
+        $receiptPath = null;
+        if ($request->hasFile('receipt')) {
+            $file = $request->file('receipt');
+            $fileName = time() . '_' . auth()->id() . '_' . $file->getClientOriginalName();
+            $receiptPath = $file->storeAs('receipts', $fileName, 'public');
+        }
 
         $paiement = Paiement::create([
             'user_id' => auth()->id(),
@@ -30,28 +39,30 @@ class PaiementController extends Controller
             'numero'  => $request->numero,
             'montant' => 10000,
             'statut'  => 'en_attente',
+            'receipt' => $receiptPath, // Store the receipt path
+            'reference' => 'PAY_' . auth()->id() . '_' . time() . '_' . $request->chapter_id,
         ]);
 
         // notify admin by email
         Mail::to('tekorolandafandjo9@gmail.com')->send(new NewPaiementNotification($paiement));
 
-        return redirect()->route('attente')->with('success','Demande enregistrée — en attente de validation.');
+        return redirect()->route('auth.page')->with('success','✅ Paiement envoyé avec succès ! Votre reçu a été transmis à l\'administrateur pour validation. Vous recevrez une notification dès que votre accès sera confirmé.');
     }
 
 
     // Admin approve / reject
     public function approuver($id)
     {
-        $p = Paiement::findOrFail($id);
-        $p->update(['statut'=>'approuve']);
-        return back()->with('success','Paiement approuvé.');
+        $paiement = Paiement::findOrFail($id);
+        $paiement->update(['statut'=>'approuve']);
+        return redirect()->back()->with('success','Paiement approuvé avec succès ✅');
     }
 
     public function rejeter($id)
     {
-        $p = Paiement::findOrFail($id);
-        $p->update(['statut'=>'rejete']);
-        return back()->with('success','Paiement rejeté.');
+        $paiement = Paiement::findOrFail($id);
+        $paiement->update(['statut'=>'rejete']);
+        return redirect()->back()->with('success','Paiement rejeté avec succès ✅');
     }
     public function valides($chapitre)
 {
@@ -66,10 +77,12 @@ class PaiementController extends Controller
 public function attente()
 {
     $paiements = \App\Models\Paiement::with('user','chapter')
-        ->where('statut', 'en_attente') // ✅ correction
+        ->where('user_id', auth()->id()) // ✅ Filtrer par utilisateur connecté
+        ->where('statut', 'en_attente')
+        ->orderBy('created_at', 'desc')
         ->get();
 
-    return view('admin.paiements.attente', compact('paiements'));
+    return view('auth.attente', compact('paiements'));
 }
 
 public function countByChapter()
@@ -78,6 +91,13 @@ public function countByChapter()
         ->where('statut', 'approuve') // ✅ correction
         ->groupBy('chapter_id')
         ->pluck('total', 'chapter_id');
+}
+
+public function updateComment(Request $request, $id)
+{
+    $paiement = Paiement::findOrFail($id);
+    $paiement->update(['comment' => $request->comment]);
+    return redirect()->back()->with('success','Commentaire ajouté avec succès ✅');
 }
 
 }

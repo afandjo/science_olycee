@@ -17,13 +17,44 @@
 <body>
 
 <div class="container mt-5">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Paiement enregistré avec succès !</h5>
+                    <p class="mb-0">{{ session('success') }}</p>
+                    <div class="mt-2">
+                        <a href="{{ route('attente') }}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-clock-history"></i> Voir mes paiements en attente
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Erreur !</h5>
+                    <p class="mb-0">{{ session('error') }}</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <h2 class="text-center mb-4">
         <span class="cours-icon"><i class="bi bi-journal-bookmark"></i></span>
         Cours disponibles
     </h2>
     <p class="text-center text-muted mb-5">
         Découvre nos chapitres de mathématiques, illustrés et interactifs.<br>
-        <span class="text-primary">Clique sur “Acheter” pour accéder au contenu complet.</span>
+        <span class="text-primary">Clique sur "Acheter" pour accéder au contenu complet.</span>
     </p>
 
     @php($preview = true) {{-- Forcer l'accès test via le bouton Accéder --}}
@@ -40,14 +71,27 @@
                             Concepts clés, exercices et exemples pour progresser.
                         </p>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <a href="{{ route('paiement', ['chapter' => $c->id]) }}" class="btn btn-primary btn-buy">
-                                <i class="bi bi-cart"></i> Acheter
-                            </a>
-                            <a href="{{ route('chapitre.show', [$c->id, 'test'=>1]) }}" class="btn btn-outline-success">
-                                <i class="bi bi-unlock"></i> Accéder
-                            </a>
+                            @if(in_array($c->id, $paidChapterIds ?? []))
+                                <a href="{{ route('chapitre.show', [$c->id]) }}" class="btn btn-success">
+                                    <i class="bi bi-unlock"></i> Accéder au cours
+                                </a>
+                            @elseif(in_array($c->id, $pendingChapterIds ?? []))
+                                <button class="btn btn-warning" disabled>
+                                    <i class="bi bi-clock-history"></i> Paiement en attente
+                                </button>
+                                <a href="{{ route('attente') }}" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-eye"></i> Voir le statut
+                                </a>
+                            @else
+                                <a href="{{ route('paiement', ['chapter' => $c->id]) }}" class="btn btn-primary btn-buy">
+                                    <i class="bi bi-cart"></i> Acheter
+                                </a>
+                                <a href="{{ route('chapitre.show', [$c->id, 'test'=>1]) }}" class="btn btn-outline-success">
+                                    <i class="bi bi-unlock"></i> Accéder (test)
+                                </a>
+                            @endif
                         </div>
-                    </div>+
+                    </div>
                 </div>
             </div>
         @empty

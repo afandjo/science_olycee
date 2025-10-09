@@ -86,8 +86,14 @@ public function login(Request $request)
             ->where('statut', 'approuve')
             ->pluck('chapter_id')
             ->toArray();
+        
+        // chapitres avec des paiements en attente pour l'utilisateur
+        $pendingChapterIds = Paiement::where('user_id', auth()->id())
+            ->where('statut', 'en_attente')
+            ->pluck('chapter_id')
+            ->toArray();
 
-        return view('auth.page', compact('chapters', 'paidChapterIds'));
+        return view('auth.page', compact('chapters', 'paidChapterIds', 'pendingChapterIds'));
     }
 
 }

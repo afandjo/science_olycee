@@ -47,6 +47,7 @@
 
 <script>
 @if($chapter->pdf)
+
 const url = "{{ asset('chapitres/'.$chapter->pdf) }}";
 const canvas = document.getElementById('pdf-canvas');
 const ctx = canvas.getContext('2d');

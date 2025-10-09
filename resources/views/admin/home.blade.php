@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\Storage; @endphp
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -30,20 +31,27 @@
                     <a class="nav-link {{ ($tab ?? 'overview') === 'overview' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'overview']) }}"><i class="bi bi-house"></i> Accueil</a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-check2-circle"></i> Paiements validés</a>
+                    <a class="nav-link {{ ($tab ?? '') === 'paiements_valides' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'paiements_valides']) }}"><i class="bi bi-check2-circle"></i> Paiements validés</a>
+                </li>
+
+                @php
+                    $pendingList = \App\Models\Paiement::with('user','chapter')
+                        ->where('statut','en_attente')->latest()->take(5)->get();
+                    $pendingCount = \App\Models\Paiement::where('statut','en_attente')->count();
+                @endphp
+                <li class="nav-item mb-2">
+                    <a class="nav-link {{ ($tab ?? '') === 'paiements' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'paiements']) }}"><i class="bi bi-credit-card"></i> Paiements en attente</a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-clock-history"></i> Paiements en attente</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-x-circle"></i> Paiements rejetés</a>
+                    <a class="nav-link {{ ($tab ?? '') === 'paiements_rejetes' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'paiements_rejetes']) }}"><i class="bi bi-x-circle"></i> Paiements rejetés</a>
                 </li>
                 <li class="nav-item mb-2">
                     <a class="nav-link {{ ($tab ?? '') === 'chapitres' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'chapitres']) }}"><i class="bi bi-journal-bookmark"></i> Chapitres</a>
                 </li>
                 <li class="nav-item mb-2">
                     <a class="nav-link {{ ($tab ?? '') === 'utilisateurs' ? 'active' : '' }}" href="{{ route('admin.home', ['tab'=>'utilisateurs']) }}"><i class="bi bi-people"></i> Utilisateurs</a>
-                </li>
+                </li>  
+                
             </ul>
         </div>
         <!-- Main dashboard -->
@@ -84,7 +92,7 @@
                             <div class="card-body">
                                 <div class="dashboard-icon mb-2"><i class="bi bi-clock-history text-warning"></i></div>
                                 <h5 class="card-title">Paiements en attente</h5>
-                                <p class="card-text fs-4">{{ $paiementsAttente ?? 0 }}</p>
+                                <p class="card-text fs-4">{{ $paiementsAttenteCount ?? 0 }}</p>
                             </div>
                         </div>
                     </div>
@@ -259,9 +267,322 @@
                         </div>
                     @endif
                 </div>
+            @elseif(($tab ?? '') === 'paiements')
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <form method="get" action="{{ route('admin.home') }}" class="row g-2 align-items-center">
+                            <input type="hidden" name="tab" value="paiements">
+                            <div class="col-auto">
+                                <input type="search" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Rechercher (utilisateur, chapitre)">
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Utilisateur</th>
+                                        <th>Chapitre</th>
+                                        <th>Méthode</th>
+                                        <th>Numéro</th>
+                                        <th>Montant</th>
+                                        <th>Référence</th>
+                                        <th>Reçu</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($paiementsAttente as $paiement)
+                                        <tr>
+                                            <td>{{ $paiement->id }}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ $paiement->user->nom }} {{ $paiement->user->prenom }}</strong><br>
+                                                    <small class="text-muted">{{ $paiement->user->email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ $paiement->chapter->title }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $paiement->methode === 'T-Money' ? 'warning' : 'success' }}">
+                                                    {{ $paiement->methode }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $paiement->numero }}</td>
+                                            <td>{{ number_format($paiement->montant, 0, ',', ' ') }} F</td>
+                                            <td>
+                                                <small class="text-muted">{{ $paiement->reference ?? 'N/A' }}</small>
+                                            </td>
+                                            <td>
+                                                @if($paiement->receipt)
+                                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#receiptModal{{ $paiement->id }}">
+                                                        <i class="bi bi-image"></i> Voir
+                                                    </button>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $paiement->created_at->format('d/m/Y H:i') }}</td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group">
+                                                    <form method="post" action="{{ route('admin.paiements.approuver', $paiement->id) }}" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-success" 
+                                                                onclick="return confirm('Approuver ce paiement ?')">
+                                                            <i class="bi bi-check-circle"></i> Approuver
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="{{ route('admin.paiements.rejeter', $paiement->id) }}" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                                onclick="return confirm('Rejeter ce paiement ?')">
+                                                            <i class="bi bi-x-circle"></i> Rejeter
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center text-muted py-4">Aucun paiement en attente.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @if($paiementsAttente instanceof \Illuminate\Contracts\Pagination\Paginator || $paiementsAttente instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                        <div class="card-footer bg-white">
+                            {{ $paiementsAttente->withQueryString()->links() }}
+                        </div>
+                    @endif
+                </div>
+            @elseif(($tab ?? '') === 'paiements_valides')
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-check2-circle text-success"></i> Paiements validés</h5>
+                            <form method="get" action="{{ route('admin.home') }}" class="row g-2 align-items-center">
+                                <input type="hidden" name="tab" value="paiements_valides">
+                                <div class="col-auto">
+                                    <input type="search" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Rechercher (utilisateur, chapitre)">
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Utilisateur</th>
+                                        <th>Chapitre</th>
+                                        <th>Méthode</th>
+                                        <th>Montant</th>
+                                        <th>Date validation</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($paiementsValidesList ?? [] as $paiement)
+                                        <tr>
+                                            <td>{{ $paiement->id }}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ $paiement->user->nom }} {{ $paiement->user->prenom }}</strong><br>
+                                                    <small class="text-muted">{{ $paiement->user->email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ $paiement->chapter->title }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $paiement->methode === 'T-Money' ? 'warning' : 'success' }}">
+                                                    {{ $paiement->methode }}
+                                                </span>
+                                            </td>
+                                            <td>{{ number_format($paiement->montant, 0, ',', ' ') }} F</td>
+                                            <td>{{ $paiement->updated_at->format('d/m/Y H:i') }}</td>
+                                            <td class="text-end">
+                                                <button type="button" class="btn btn-sm btn-outline-info" onclick="showCommentModal({{ $paiement->id }}, '{{ $paiement->comment ?? '' }}')">
+                                                    <i class="bi bi-chat-text"></i> Commentaire
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">Aucun paiement validé.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @if(isset($paiementsValidesList) && $paiementsValidesList instanceof \Illuminate\Contracts\Pagination\Paginator)
+                        <div class="card-footer bg-white">
+                            {{ $paiementsValidesList->withQueryString()->links() }}
+                        </div>
+                    @endif
+                </div>
+            @elseif(($tab ?? '') === 'paiements_rejetes')
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-x-circle text-danger"></i> Paiements rejetés</h5>
+                            <form method="get" action="{{ route('admin.home') }}" class="row g-2 align-items-center">
+                                <input type="hidden" name="tab" value="paiements_rejetes">
+                                <div class="col-auto">
+                                    <input type="search" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Rechercher (utilisateur, chapitre)">
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Utilisateur</th>
+                                        <th>Chapitre</th>
+                                        <th>Méthode</th>
+                                        <th>Montant</th>
+                                        <th>Date rejet</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($paiementsRejetesList ?? [] as $paiement)
+                                        <tr>
+                                            <td>{{ $paiement->id }}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ $paiement->user->nom }} {{ $paiement->user->prenom }}</strong><br>
+                                                    <small class="text-muted">{{ $paiement->user->email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ $paiement->chapter->title }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $paiement->methode === 'T-Money' ? 'warning' : 'success' }}">
+                                                    {{ $paiement->methode }}
+                                                </span>
+                                            </td>
+                                            <td>{{ number_format($paiement->montant, 0, ',', ' ') }} F</td>
+                                            <td>{{ $paiement->updated_at->format('d/m/Y H:i') }}</td>
+                                            <td class="text-end">
+                                                <button type="button" class="btn btn-sm btn-outline-info" onclick="showCommentModal({{ $paiement->id }}, '{{ $paiement->comment ?? '' }}')">
+                                                    <i class="bi bi-chat-text"></i> Commentaire
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">Aucun paiement rejeté.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @if(isset($paiementsRejetesList) && $paiementsRejetesList instanceof \Illuminate\Contracts\Pagination\Paginator)
+                        <div class="card-footer bg-white">
+                            {{ $paiementsRejetesList->withQueryString()->links() }}
+                        </div>
+                    @endif
+                </div>
             @endif
         </div>
     </div>
 </div>
+
+<!-- Modales pour afficher les reçus -->
+@if(($tab ?? '') === 'paiements')
+    @foreach($paiementsAttente as $paiement)
+        @if($paiement->receipt)
+            <!-- Modal pour le reçu -->
+            <div class="modal fade" id="receiptModal{{ $paiement->id }}" tabindex="-1" aria-labelledby="receiptModalLabel{{ $paiement->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="receiptModalLabel{{ $paiement->id }}">
+                                Reçu de paiement - {{ $paiement->user->nom }} {{ $paiement->user->prenom }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="mb-3">
+                                <strong>Chapitre:</strong> {{ $paiement->chapter->title }}<br>
+                                <strong>Méthode:</strong> {{ $paiement->methode }}<br>
+                                <strong>Numéro:</strong> {{ $paiement->numero }}<br>
+                                <strong>Montant:</strong> {{ number_format($paiement->montant, 0, ',', ' ') }} F<br>
+                                <strong>Référence:</strong> {{ $paiement->reference ?? 'N/A' }}<br>
+                                <strong>Date:</strong> {{ $paiement->created_at->format('d/m/Y H:i') }}
+                            </div>
+                            <div class="border rounded p-2">
+                                <img src="{{ Storage::url($paiement->receipt) }}" 
+                                     class="img-fluid" 
+                                     alt="Reçu de paiement"
+                                     style="max-height: 500px; cursor: pointer;"
+                                     onclick="window.open('{{ Storage::url($paiement->receipt) }}', '_blank')"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
+                            </div>
+                            <p class="text-muted mt-2 small">Cliquez sur l'image pour l'ouvrir en grand</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            <a href="{{ Storage::url($paiement->receipt) }}" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Ouvrir en grand
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endforeach
+@endif
+
+<!-- Modal pour les commentaires -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="commentModalLabel">Ajouter un commentaire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="commentForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Commentaire</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="Ajoutez un commentaire sur ce paiement..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showCommentModal(paiementId, currentComment = '') {
+    document.getElementById('comment').value = currentComment;
+    document.getElementById('commentForm').action = `/admin/paiements/${paiementId}/comment`;
+    new bootstrap.Modal(document.getElementById('commentModal')).show();
+}
+</script>
 </body>
 </html>

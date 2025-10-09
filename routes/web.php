@@ -11,6 +11,7 @@ Route::get('/', function () {
 });
 
 
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 
@@ -77,6 +78,8 @@ Route::middleware(['web','is_admin'])->group(function(){
     })->name('admin.paiements');
 
     Route::post('/admin/paiements/{id}/approuver', [PaiementController::class, 'approuver'])->name('admin.paiements.approuver');
+    Route::post('/admin/paiements/{id}/rejeter', [PaiementController::class, 'rejeter'])->name('admin.paiements.rejeter');
+    Route::post('/admin/paiements/{id}/comment', [PaiementController::class, 'updateComment'])->name('admin.paiements.comment');
 
     // upload video for a chapter
     Route::post('/admin/chapters/{id}/upload-video', [ChapterController::class, 'uploadVideo'])->name('admin.chapters.uploadVideo');

@@ -49,10 +49,13 @@ class AdminController extends Controller
         $usersCount = User::count();
         $chaptersCount = Chapter::count();
         $paiementsValides = Paiement::where('statut', 'approuve')->count();
-        $paiementsAttente = Paiement::where('statut', 'en_attente')->count();
+        $paiementsAttenteCount = Paiement::where('statut', 'en_attente')->count();
         $revenuTotal = Paiement::where('statut', 'approuve')->sum('montant');
         $paiementsRecents = collect();
         $chapters = collect(); // éviter compact() variable indéfinie
+        $paiementsAttente = collect(); // pour la liste des paiements en attente
+        $paiementsValidesList = collect(); // pour la liste des paiements validés
+        $paiementsRejetesList = collect(); // pour la liste des paiements rejetés
 
         if ($tab === 'overview') {
             $paiementsRecents = Paiement::with('user','chapter')
@@ -81,6 +84,51 @@ class AdminController extends Controller
                 $cQuery->where('title', 'like', "%{$cSearch}%");
             }
             $chapters = $cQuery->orderBy('id')->paginate(10)->appends(['tab' => 'chapitres', 'q' => $cSearch]);
+        } elseif ($tab === 'paiements') {
+            // Liste des paiements en attente avec recherche et pagination
+            $pQuery = Paiement::with('user', 'chapter')
+                ->where('statut', 'en_attente');
+            $pSearch = $request->get('q');
+            if ($pSearch) {
+                $pQuery->whereHas('user', function($q) use ($pSearch) {
+                    $q->where('nom', 'like', "%{$pSearch}%")
+                      ->orWhere('prenom', 'like', "%{$pSearch}%")
+                      ->orWhere('email', 'like', "%{$pSearch}%");
+                })->orWhereHas('chapter', function($q) use ($pSearch) {
+                    $q->where('title', 'like', "%{$pSearch}%");
+                });
+            }
+            $paiementsAttente = $pQuery->orderByDesc('created_at')->paginate(10)->appends(['tab' => 'paiements', 'q' => $pSearch]);
+        } elseif ($tab === 'paiements_valides') {
+            // Liste des paiements validés avec recherche et pagination
+            $pQuery = Paiement::with('user', 'chapter')
+                ->where('statut', 'approuve');
+            $pSearch = $request->get('q');
+            if ($pSearch) {
+                $pQuery->whereHas('user', function($q) use ($pSearch) {
+                    $q->where('nom', 'like', "%{$pSearch}%")
+                      ->orWhere('prenom', 'like', "%{$pSearch}%")
+                      ->orWhere('email', 'like', "%{$pSearch}%");
+                })->orWhereHas('chapter', function($q) use ($pSearch) {
+                    $q->where('title', 'like', "%{$pSearch}%");
+                });
+            }
+            $paiementsValidesList = $pQuery->orderByDesc('updated_at')->paginate(10)->appends(['tab' => 'paiements_valides', 'q' => $pSearch]);
+        } elseif ($tab === 'paiements_rejetes') {
+            // Liste des paiements rejetés avec recherche et pagination
+            $pQuery = Paiement::with('user', 'chapter')
+                ->where('statut', 'rejete');
+            $pSearch = $request->get('q');
+            if ($pSearch) {
+                $pQuery->whereHas('user', function($q) use ($pSearch) {
+                    $q->where('nom', 'like', "%{$pSearch}%")
+                      ->orWhere('prenom', 'like', "%{$pSearch}%")
+                      ->orWhere('email', 'like', "%{$pSearch}%");
+                })->orWhereHas('chapter', function($q) use ($pSearch) {
+                    $q->where('title', 'like', "%{$pSearch}%");
+                });
+            }
+            $paiementsRejetesList = $pQuery->orderByDesc('updated_at')->paginate(10)->appends(['tab' => 'paiements_rejetes', 'q' => $pSearch]);
         }
 
         return view('admin.home', compact(
@@ -89,10 +137,13 @@ class AdminController extends Controller
             'usersCount',
             'chaptersCount',
             'paiementsValides',
-            'paiementsAttente',
+            'paiementsAttenteCount',
             'revenuTotal',
             'paiementsRecents',
-            'chapters'
+            'chapters',
+            'paiementsAttente',
+            'paiementsValidesList',
+            'paiementsRejetesList'
         ));
     }
 

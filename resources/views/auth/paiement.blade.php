@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- ajout pour responsive -->
   <title>Paiement chapitres</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <!-- favicon / icônes du site (tailles agrandies et icône iOS) -->
   <link rel="icon" href="{{ asset('images/lycee-removebg-preview.png') }}" type="image/jpeg" sizes="32x32">
   <link rel="icon" href="{{ asset('images/lycee-removebg-preview.png') }}" type="image/jpeg" sizes="64x64">
@@ -33,6 +34,30 @@
 <body class="bg-light">
 
 <div class="container py-4">
+  @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <div>
+          <strong>Succès !</strong> {{ session('success') }}
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <div>
+          <strong>Erreur !</strong> {{ session('error') }}
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
   <h2 class="mb-4 text-center fs-5">Choisissez un chapitre à payer (10.000 F)</h2>
 
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
@@ -71,9 +96,9 @@
                 <label for="receipt-{{ $chapter->id }}" class="form-label small">Joindre la capture du reçu (photo ou capture d'écran)</label>
                 <input type="file" name="receipt" id="receipt-{{ $chapter->id }}" accept="image/*" class="form-control form-control-sm" required>
               </div>
-              <button type="submit" class="btn btn-primary btn-sm mt-2 w-100 w-md-auto">J'ai payé</button>
+              <button type="button" class="btn btn-primary btn-sm mt-2 w-100 w-md-auto" onclick="confirmPayment({{ $chapter->id }})">J'ai payé</button>
             </form>
-
+         
           </div>
         </div>
       </div>
@@ -100,6 +125,64 @@ function doPayment(chapterId, methode, numero, telCode){
     } catch(e) {
         // fallback : rien à faire
         console.warn('Impossible d\'ouvrir le dialer:', e);
+    }
+}
+
+function confirmPayment(chapterId) {
+    // Vérifier si les champs sont remplis
+    const methode = document.getElementById('methode-'+chapterId).value;
+    const numero = document.getElementById('numero-'+chapterId).value;
+    const receipt = document.getElementById('receipt-'+chapterId).files[0];
+    
+    if (!methode || !numero) {
+        alert('⚠️ Veuillez d\'abord sélectionner une méthode de paiement (T-Money ou Flooz)');
+        return;
+    }
+    
+    if (!receipt) {
+        alert('⚠️ Veuillez joindre la capture du reçu de paiement');
+        return;
+    }
+    
+    // Vérifier le type de fichier
+    if (!receipt.type.startsWith('image/')) {
+        alert('⚠️ Veuillez sélectionner une image (JPG, PNG, etc.)');
+        return;
+    }
+    
+    // Vérifier la taille du fichier (2MB max)
+    if (receipt.size > 2 * 1024 * 1024) {
+        alert('⚠️ Le fichier est trop volumineux. Taille maximum : 2MB');
+        return;
+    }
+    
+    // Boîte de dialogue de confirmation
+    const confirmMessage = `
+📋 Confirmation d'envoi du reçu :
+
+💰 Méthode : ${methode}
+📱 Numéro : ${numero}
+📄 Fichier : ${receipt.name}
+📏 Taille : ${(receipt.size / 1024).toFixed(1)} KB
+
+Êtes-vous sûr de vouloir envoyer ce reçu pour validation ?
+    `;
+    
+    if (confirm(confirmMessage)) {
+        // Afficher un indicateur de chargement
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Envoi en cours...';
+        button.disabled = true;
+        
+        // Soumettre le formulaire
+        document.getElementById('pay-form-'+chapterId).submit();
+        
+        // Réactiver le bouton après 5 secondes (au cas où)
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 5000);
     }
 }
 </script>
