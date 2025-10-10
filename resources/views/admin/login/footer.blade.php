@@ -1,6 +1,6 @@
 <footer class="bg-dark text-light py-4 mt-5">
   <div class="container text-center">
-    
+
     <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
       <!-- Facebook -->
       <a href="https://www.facebook.com/profile.php?id=61552124691149" target="_blank" class="text-light text-decoration-none">
@@ -16,7 +16,7 @@
       </a>
     </div>
 
-    <p class="mt-3 mb-0">Science Olycee - Tous droits réservés</p>
+    <p class="mt-3 mb-0">SCIENCE O LYCEE - Tous droits réservés</p>
   </div>
 </footer>
 

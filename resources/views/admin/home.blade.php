@@ -17,7 +17,14 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <h2 class="mb-4">Tableau de bord Administrateur</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Tableau de bord Administrateur</h2>
+
+        <!-- 🔹 Bouton vers la gestion des chapitres -->
+        <a href="{{ route('admin.chapitres.index') }}" class="btn btn-primary">
+            📚 Gérer les Chapitres
+        </a>
+    </div>
 
     @if($users->isEmpty())
         <p class="text-center">Aucun utilisateur inscrit pour le moment.</p>

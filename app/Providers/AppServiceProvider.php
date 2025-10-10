@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         // Partager les nombres de paiements validés par chapitre
         View::composer('admin.login.nav', function ($view) {
             $counts = Paiement::selectRaw('chapter_id, COUNT(*) as total')
-                ->where('status', 'valide')
+                ->where('statut', 'valide')
                 ->groupBy('chapter_id')
                 ->pluck('total', 'chapter_id');
 

@@ -18,7 +18,7 @@ public function up()
         $table->unsignedBigInteger('chapter_id');
         $table->string('methode'); // 'T-Money' ou 'Flooz'
         $table->string('numero');  // numéro payé (sans +228)
-        $table->decimal('montant', 10, 2)->default(10000);
+        $table->decimal('montant', 10, 2)->default(5000);
         $table->enum('statut', ['en_attente','approuve','rejete'])->default('en_attente');
         $table->timestamps();
         $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');

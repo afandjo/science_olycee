@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Paiement;
 use Illuminate\Http\Request;
 use App\Models\User; // <-- toujours ici, pas à l'intérieur de la classe
 
@@ -36,15 +37,15 @@ class AdminController extends Controller
 
     // Page admin
     public function index()
-    {
-        if (!session('admin')) {
-            return redirect()->route('admin.connexion')->with('error', 'Veuillez vous connecter d’abord.');
-        }
-
-        // Récupérer tous les utilisateurs pour l'affichage
-        $users = User::all();
-        return view('admin.home', compact('users'));
+{
+    if (!session('admin')) {
+        return redirect()->route('admin.connexion')->with('error', 'Veuillez vous connecter d’abord.');
     }
+
+    $users = User::all();
+    $counts = $this->getCountsByChapter(); // <-- ajouter ça
+    return view('admin.home', compact('users', 'counts'));
+}
 
     // Supprimer un utilisateur
     public function destroy($id)
@@ -83,6 +84,16 @@ class AdminController extends Controller
 {
     session()->forget('admin'); // Supprime la session admin
     return redirect()->route('admin.connexion')->with('success', 'Vous êtes déconnecté avec succès ✅');
+}
+
+public function getCountsByChapter()
+{
+    // Renvoie un tableau chapter_id => total paiements approuvés
+    return Paiement::selectRaw('chapter_id, COUNT(*) as total')
+        ->where('statut', 'approuve')
+        ->groupBy('chapter_id')
+        ->pluck('total', 'chapter_id')
+        ->toArray();
 }
 
 }

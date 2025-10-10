@@ -8,15 +8,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IsAdmin
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->is_admin) {
+        // Vérifie si la session admin est active
+        if (session('admin') === true) {
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'Accès réservé aux administrateurs.');
+        // Sinon, redirige vers la page de connexion admin
+        return redirect()->route('admin.login')->with('error', 'Accès réservé à l’administrateur.');
     }
 }

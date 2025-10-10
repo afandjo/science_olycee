@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Inscription</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+@extends('layouts.app')
 
+@section('title', 'Inscription')
+
+@section('content')
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6 bg-white p-4 rounded shadow">
@@ -63,11 +59,7 @@
 
                 <button type="submit" class="btn btn-primary w-100">S'inscrire</button>
             </form>
-
-           
         </div>
     </div>
 </div>
-
-</body>
-</html>
+@endsection

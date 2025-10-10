@@ -96,3 +96,41 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
     Route::get('/paiements/attente', [PaiementController::class, 'attente'])
         ->name('paiements.attente');
 });
+
+
+Route::post('/paiements/{id}/approuver', [PaiementController::class, 'approuver'])->name('paiements.approuver');
+Route::delete('/paiements/{id}/rejeter', [PaiementController::class, 'rejeter'])->name('paiements.rejeter');
+
+
+
+
+
+
+
+
+
+
+
+// Afficher le chapitre (PDF + vidéo)
+Route::get('/chapitre/{id}', [ChapterController::class, 'show'])
+    ->name('chapitre.show')
+    ->middleware('auth'); // si tu veux que seuls les utilisateurs connectés accèdent
+
+// Optionnel : servir PDF sécurisé depuis storage
+Route::get('/chapitre/pdf/{id}', [ChapterController::class, 'pdf'])
+    ->name('chapitre.pdf')
+    ->middleware('auth');
+
+
+
+
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/chapitres', [ChapterController::class, 'index'])->name('admin.chapitres.index');
+    Route::get('/admin/chapitres/{id}/edit', [ChapterController::class, 'edit'])->name('admin.chapitres.edit');
+    Route::post('/admin/chapitres/{id}/update', [ChapterController::class, 'update'])->name('admin.chapitres.update');
+});
+
+
+
+
+

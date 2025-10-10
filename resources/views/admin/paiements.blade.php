@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('admin.login.nav')
 @section('content')
 <h2>Validation des paiements</h2>
 <table class="table">
