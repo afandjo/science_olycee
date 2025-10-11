@@ -1,12 +1,26 @@
 @component('mail::message')
-# Nouveau paiement en attente
+# 💰 Nouveau paiement en attente
+
+Un nouvel utilisateur a effectué un paiement et attend votre validation.
+
+## Informations de l'utilisateur
 
 **Nom :** {{ $paiement->user->nom }}  
 **Prénom(s) :** {{ $paiement->user->prenom }}  
 **Email :** {{ $paiement->user->email }}  
-**Chapitre :** {{ $paiement->chapter->title }}  
-**Méthode :** {{ $paiement->methode }}  
-**Numéro :** {{ $paiement->numero }}  
 
-Veuillez approuver ou rejeter ce paiement dans l'admin.
+## Détails du paiement
+
+**Chapitre :** {{ $paiement->chapter->title }}  
+**Montant :** {{ number_format($paiement->montant, 0, ',', ' ') }} FCFA  
+**Méthode :** {{ ucfirst($paiement->methode) }}  
+**Numéro :** {{ $paiement->numero }}  
+**Date :** {{ $paiement->created_at->format('d/m/Y à H:i') }}  
+
+@component('mail::button', ['url' => config('app.url').'/admin/paiements'])
+Gérer les paiements
+@endcomponent
+
+Merci,  
+{{ config('app.name') }}
 @endcomponent

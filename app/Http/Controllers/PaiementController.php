@@ -36,7 +36,7 @@ class PaiementController extends Controller
         ]);
 
         // Notification admin par email
-        Mail::to('tekorolandafandjo94@gmail.com')->send(new NewPaiementNotification($paiement));
+        Mail::to('scienceolycee@gmail.com')->send(new NewPaiementNotification($paiement));
 
         // Vérifier si un paiement approuvé existe déjà pour ce chapitre
         $paiementValide = Paiement::where('user_id', auth()->id())

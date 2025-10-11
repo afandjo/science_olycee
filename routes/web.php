@@ -121,13 +121,18 @@ Route::get('/chapitre/pdf/{id}', [ChapterController::class, 'pdf'])
     ->name('chapitre.pdf')
     ->middleware('auth');
 
+// Servir vidéo sécurisée depuis storage
+Route::get('/chapitre/video/{id}', [ChapterController::class, 'video'])
+    ->name('chapitre.video')
+    ->middleware('auth');
 
 
 
-    Route::middleware(['auth'])->group(function () {
+
+Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/chapitres', [ChapterController::class, 'index'])->name('admin.chapitres.index');
     Route::get('/admin/chapitres/{id}/edit', [ChapterController::class, 'edit'])->name('admin.chapitres.edit');
-    Route::post('/admin/chapitres/{id}/update', [ChapterController::class, 'update'])->name('admin.chapitres.update');
+    Route::post('/admin/chapitres/{id}', [ChapterController::class, 'update'])->name('admin.chapitres.update');
 });
 
 

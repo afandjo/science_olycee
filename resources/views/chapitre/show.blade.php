@@ -5,7 +5,7 @@
     <title>Chapitre : {{ $chapter->title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         body { background-color: #f8f9fa; }
         canvas { width: 100% !important; border-bottom: 1px solid #ccc; touch-action: pinch-zoom; }
@@ -53,10 +53,12 @@
     @if($chapter->video)
     <div class="card mb-4 p-3 shadow-sm">
         <h5>Vidéo</h5>
-        <video controls playsinline controlsList="nodownload">
-            <source src="{{ asset('storage/chapitres/'.$chapter->video) }}" type="video/mp4">
+        <video controls playsinline controlsList="nodownload" style="max-width: 100%; height: auto;" preload="metadata">
+            <source src="{{ route('chapitre.video', $chapter->id) }}" type="video/mp4">
+            <source src="{{ route('chapitre.video', $chapter->id) }}" type="video/quicktime">
             Votre navigateur ne supporte pas la lecture de la vidéo.
         </video>
+        <p class="text-muted small mt-2">📹 Fichier : {{ $chapter->video }}</p>
     </div>
     @else
         <p class="text-muted">Vidéo non ajoutée par l'administrateur.</p>
@@ -66,6 +68,8 @@
 <script>
 @if($chapter->pdf)
 const pdfUrl = "{{ route('chapitre.pdf', $chapter->id) }}";
+console.log("URL du PDF:", pdfUrl);
+
 const canvas = document.getElementById('pdf-canvas');
 const ctx = canvas.getContext('2d');
 const pageInfo = document.getElementById('page-info');
@@ -73,13 +77,29 @@ const controls = document.getElementById('pdf-viewer').querySelector('div.d-flex
 const pdfError = document.getElementById('pdf-error');
 const pdfFallback = document.getElementById('pdf-fallback');
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "https://mozilla.github.io/pdf.js/build/pdf.worker.js";
+// Configuration PDF.js
+if (typeof pdfjsLib === 'undefined') {
+    console.error("PDF.js n'est pas chargé!");
+    pdfError.classList.remove('d-none');
+    pdfError.textContent = "Erreur: Bibliothèque PDF.js non chargée.";
+    canvas.style.display = "none";
+    controls.style.display = "none";
+    pdfFallback.classList.remove('d-none');
+} else {
+    console.log("PDF.js chargé avec succès");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 let pdfDoc = null, currentPage = 1, totalPages = 0, isRendering = false;
 let scale = 1.2;
 
 function renderPage(num){
+    if (!pdfDoc) {
+        console.error("pdfDoc n'est pas défini");
+        return;
+    }
     isRendering = true;
+    console.log("Rendu de la page:", num);
     pdfDoc.getPage(num).then(page => {
         const viewport = page.getViewport({ scale });
         canvas.height = viewport.height;
@@ -87,7 +107,11 @@ function renderPage(num){
         page.render({ canvasContext: ctx, viewport }).promise.then(() => {
             isRendering = false;
             pageInfo.textContent = `Page ${num} / ${totalPages}`;
+            console.log("Page rendue avec succès");
         });
+    }).catch(err => {
+        console.error("Erreur lors du rendu de la page:", err);
+        isRendering = false;
     });
 }
 
@@ -96,13 +120,20 @@ document.getElementById('next').addEventListener('click', () => { if(currentPage
 document.getElementById('zoom-in').addEventListener('click', () => { scale += 0.2; renderPage(currentPage); });
 document.getElementById('zoom-out').addEventListener('click', () => { if(scale>0.4){ scale -= 0.2; renderPage(currentPage); } });
 
-pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
+// Chargement du PDF
+console.log("Tentative de chargement du PDF...");
+pdfjsLib.getDocument({
+    url: pdfUrl,
+    withCredentials: true
+}).promise.then(pdf => {
+    console.log("PDF chargé avec succès! Pages:", pdf.numPages);
     pdfDoc = pdf;
     totalPages = pdf.numPages;
     renderPage(currentPage);
 }).catch(err => {
-    console.error("Erreur pdf.js:", err);
+    console.error("Erreur lors du chargement du PDF:", err);
     pdfError.classList.remove('d-none');
+    pdfError.textContent = "Erreur: " + err.message + ". Tentative de chargement en iframe...";
     canvas.style.display = "none";
     controls.style.display = "none";
     pdfFallback.classList.remove('d-none');
@@ -122,7 +153,9 @@ document.addEventListener('keydown', e => {
 // Overlay filigrane anti-capture
 setInterval(() => {
     const overlay = document.getElementById('overlay');
-    overlay.style.background = `rgba(255,255,255,${Math.random()*0.05})`;
+    if (overlay) {
+        overlay.style.background = `rgba(255,255,255,${Math.random()*0.05})`;
+    }
 }, 800);
 @endif
 </script>

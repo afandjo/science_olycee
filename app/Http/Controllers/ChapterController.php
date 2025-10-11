@@ -35,6 +35,38 @@ class ChapterController extends Controller
         ]);
     }
 
+    // Affichage sécurisé de la vidéo
+    public function video($id)
+    {
+        $chapter = Chapter::findOrFail($id);
+
+        if (!$chapter->video) {
+            abort(404, "Vidéo non trouvée pour ce chapitre.");
+        }
+
+        $path = storage_path('app/public/chapitres/'.$chapter->video);
+
+        if (!file_exists($path)) {
+            abort(404, "Fichier vidéo introuvable : " . $path);
+        }
+
+        // Déterminer le type MIME basé sur l'extension
+        $extension = pathinfo($chapter->video, PATHINFO_EXTENSION);
+        $mimeTypes = [
+            'mp4' => 'video/mp4',
+            'mov' => 'video/quicktime',
+            'mpeg' => 'video/mpeg',
+            'avi' => 'video/x-msvideo',
+        ];
+        $mimeType = $mimeTypes[strtolower($extension)] ?? 'video/mp4';
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.$chapter->video.'"',
+            'Accept-Ranges' => 'bytes'
+        ]);
+    }
+
     // Liste des chapitres pour l'admin
     public function index()
     {
@@ -56,23 +88,35 @@ class ChapterController extends Controller
 
         $request->validate([
             'pdf' => 'nullable|mimes:pdf|max:20480',
-            'video' => 'nullable|mimetypes:video/mp4|max:51200'
+            'video' => 'nullable|mimetypes:video/mp4,video/mpeg,video/quicktime|max:102400'
         ]);
 
+        $updated = false;
+
         if ($request->hasFile('pdf')) {
-            $pdfName = 'chapitre' . $id . '.' . $request->file('pdf')->getClientOriginalExtension();
-            $request->file('pdf')->storeAs('public/chapitres', $pdfName);
+            $pdfFile = $request->file('pdf');
+            $pdfName = 'chapitre' . $id . '.pdf';
+            $pdfFile->storeAs('public/chapitres', $pdfName);
             $chapter->pdf = $pdfName;
+            $updated = true;
+            \Log::info("PDF uploadé: " . $pdfName);
         }
 
         if ($request->hasFile('video')) {
-            $videoName = 'chapitre' . $id . '.' . $request->file('video')->getClientOriginalExtension();
-            $request->file('video')->storeAs('public/chapitres', $videoName);
+            $videoFile = $request->file('video');
+            $extension = $videoFile->getClientOriginalExtension();
+            $videoName = 'chapitre' . $id . '.' . $extension;
+            $videoFile->storeAs('public/chapitres', $videoName);
             $chapter->video = $videoName;
+            $updated = true;
+            \Log::info("Vidéo uploadée: " . $videoName);
         }
 
-        $chapter->save();
+        if ($updated) {
+            $chapter->save();
+            return redirect()->route('admin.chapitres.index')->with('success', 'Chapitre mis à jour avec succès ✅');
+        }
 
-        return redirect()->route('admin.chapitres.index')->with('success', 'Chapitre mis à jour avec succès ✅');
+        return redirect()->back()->with('info', 'Aucun fichier sélectionné.');
     }
 }
