@@ -22,6 +22,7 @@
                         <th>Prénom</th>
                         <th>Email</th>
                         <th>Montant</th>
+                        <th>Reçu</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -32,6 +33,30 @@
                         <td>{{ $p->user->prenom ?? '---' }}</td>
                         <td>{{ $p->user->email ?? '---' }}</td>
                         <td>{{ number_format($p->montant ?? 5000, 0, ',', ' ') }} F</td>
+                        <td>
+                            @if($p->recu)
+                                @php
+                                    $extension = pathinfo($p->recu, PATHINFO_EXTENSION);
+                                @endphp
+                                @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif']))
+                                    <!-- Afficher l'image -->
+                                    <a href="{{ asset('storage/' . $p->recu) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $p->recu) }}" alt="Reçu" style="max-width: 80px; max-height: 80px; cursor: pointer;">
+                                    </a>
+                                @elseif($extension === 'pdf')
+                                    <!-- Lien pour télécharger le PDF -->
+                                    <a href="{{ asset('storage/' . $p->recu) }}" target="_blank" class="btn btn-sm btn-info">
+                                        📄 Voir PDF
+                                    </a>
+                                @else
+                                    <a href="{{ asset('storage/' . $p->recu) }}" target="_blank" class="btn btn-sm btn-secondary">
+                                        📎 Télécharger
+                                    </a>
+                                @endif
+                            @else
+                                <span class="text-muted">Aucun reçu</span>
+                            @endif
+                        </td>
                         <td>{{ $p->created_at->format('d/m/Y H:i') }}</td>
                     </tr>
                     @endforeach

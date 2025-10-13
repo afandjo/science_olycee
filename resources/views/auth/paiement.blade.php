@@ -86,11 +86,19 @@
                  class="btn btn-success btn-sm m-1"
                  onclick="setPayment({{ $chapter->id }}, 'Flooz', '97370739')">Flooz</a>
 
-              <form action="{{ route('paiement.store') }}" method="POST" id="pay-form-{{ $chapter->id }}">
+              <form action="{{ route('paiement.store') }}" method="POST" id="pay-form-{{ $chapter->id }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="methode" id="methode-{{ $chapter->id }}">
                 <input type="hidden" name="numero"  id="numero-{{ $chapter->id }}">
                 <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+                
+                <!-- Upload du reçu -->
+                <div class="mt-2">
+                  <label for="recu-{{ $chapter->id }}" class="form-label small">📎 Joindre le reçu :</label>
+                  <input type="file" class="form-control form-control-sm" name="recu" id="recu-{{ $chapter->id }}" accept="image/*,application/pdf" required>
+                  <small class="text-muted">JPG, PNG ou PDF (max 2MB)</small>
+                </div>
+                
                 <button type="submit" class="btn btn-primary btn-sm mt-2">J'ai payé</button>
               </form>
 
@@ -112,11 +120,19 @@
                  class="btn btn-success btn-sm m-1"
                  onclick="setPayment({{ $chapter->id }}, 'Flooz', '97370739')">Flooz</a>
 
-              <form action="{{ route('paiement.store') }}" method="POST" id="pay-form-{{ $chapter->id }}">
+              <form action="{{ route('paiement.store') }}" method="POST" id="pay-form-{{ $chapter->id }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="methode" id="methode-{{ $chapter->id }}">
                 <input type="hidden" name="numero"  id="numero-{{ $chapter->id }}">
                 <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+                
+                <!-- Upload du reçu -->
+                <div class="mt-2">
+                  <label for="recu-{{ $chapter->id }}" class="form-label small">📎 Joindre le reçu :</label>
+                  <input type="file" class="form-control form-control-sm" name="recu" id="recu-{{ $chapter->id }}" accept="image/*,application/pdf" required>
+                  <small class="text-muted">JPG, PNG ou PDF (max 2MB)</small>
+                </div>
+                
                 <button type="submit" class="btn btn-primary btn-sm mt-2">Refaire le paiement</button>
               </form>
             @endif

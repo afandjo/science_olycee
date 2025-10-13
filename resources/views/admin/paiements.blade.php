@@ -1,8 +1,18 @@
 @extends('admin.login.nav')
 @section('content')
 <h2>Validation des paiements</h2>
-<table class="table">
-<thead><tr><th>Élève</th><th>Chapitre</th><th>Méthode</th><th>Num</th><th>Statut</th><th>Actions</th></tr></thead>
+<table class="table table-bordered">
+<thead class="table-dark">
+  <tr>
+    <th>Élève</th>
+    <th>Chapitre</th>
+    <th>Méthode</th>
+    <th>Num</th>
+    <th>Reçu</th>
+    <th>Statut</th>
+    <th>Actions</th>
+  </tr>
+</thead>
 <tbody>
 @foreach($paiements as $p)
 <tr>
@@ -10,11 +20,51 @@
   <td>{{ $p->chapter->title }}</td>
   <td>{{ $p->methode }}</td>
   <td>{{ $p->numero }}</td>
-  <td>{{ $p->statut }}</td>
+  <td>
+    @if($p->recu)
+      @php
+        $extension = pathinfo($p->recu, PATHINFO_EXTENSION);
+      @endphp
+      @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif']))
+        <!-- Afficher l'image -->
+        <a href="{{ asset('storage/' . $p->recu) }}" target="_blank">
+          <img src="{{ asset('storage/' . $p->recu) }}" alt="Reçu" style="max-width: 100px; max-height: 100px; cursor: pointer;">
+        </a>
+      @elseif($extension === 'pdf')
+        <!-- Lien pour télécharger le PDF -->
+        <a href="{{ asset('storage/' . $p->recu) }}" target="_blank" class="btn btn-sm btn-info">
+          📄 Voir PDF
+        </a>
+      @else
+        <a href="{{ asset('storage/' . $p->recu) }}" target="_blank" class="btn btn-sm btn-secondary">
+          📎 Télécharger
+        </a>
+      @endif
+    @else
+      <span class="text-muted">Aucun reçu</span>
+    @endif
+  </td>
+  <td>
+    @if($p->statut === 'approuve')
+      <span class="badge bg-success">✅ Validé</span>
+    @elseif($p->statut === 'en_attente')
+      <span class="badge bg-warning text-dark">⏳ En attente</span>
+    @else
+      <span class="badge bg-danger">❌ Rejeté</span>
+    @endif
+  </td>
   <td>
     @if($p->statut == 'en_attente')
-      <form action="{{ route('admin.paiements.approuver', $p->id) }}" method="POST" style="display:inline">@csrf<button class="btn btn-sm btn-success">Approuver</button></form>
-      <form action="{{ route('admin.paiements.rejeter', $p->id) }}" method="POST" style="display:inline">@csrf<button class="btn btn-sm btn-danger">Rejeter</button></form>
+      <form action="{{ route('admin.paiements.approuver', $p->id) }}" method="POST" style="display:inline">
+        @csrf
+        <button class="btn btn-sm btn-success">✅ Approuver</button>
+      </form>
+      <form action="{{ route('admin.paiements.rejeter', $p->id) }}" method="POST" style="display:inline">
+        @csrf
+        <button class="btn btn-sm btn-danger">❌ Rejeter</button>
+      </form>
+    @else
+      <span class="text-muted">-</span>
     @endif
   </td>
 </tr>

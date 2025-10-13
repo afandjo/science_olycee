@@ -24,13 +24,21 @@ class PaiementController extends Controller
             'methode'    => 'required|string',
             'numero'     => 'required|string',
             'chapter_id' => 'required|integer|exists:chapters,id',
+            'recu'       => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048', // Max 2MB
         ]);
+
+        // Gérer l'upload du fichier reçu
+        $recuPath = null;
+        if ($request->hasFile('recu')) {
+            $recuPath = $request->file('recu')->store('recus', 'public');
+        }
 
         $paiement = Paiement::create([
             'user_id'    => auth()->id(),
             'chapter_id' => $request->chapter_id,
             'methode'    => $request->methode,
             'numero'     => $request->numero,
+            'recu'       => $recuPath,
             'montant'    => 5000,
             'statut'     => 'en_attente',
         ]);
@@ -51,7 +59,7 @@ class PaiementController extends Controller
         }
 
         // Sinon, rediriger vers la page attente
-        return redirect('auth/attente')
+        return redirect()->route('attente')
                  ->with('success', 'Demande enregistrée — en attente de validation.');
     }
 
@@ -103,7 +111,7 @@ class PaiementController extends Controller
 
     public function attent()
 {
-    return view('paiement.attente'); // Assure-toi que la vue existe
+    return view('auth.attente');
 }
 
 }

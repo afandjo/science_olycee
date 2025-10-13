@@ -67,7 +67,7 @@ Route::get('/home', [AuthController::class, 'page'])->middleware('auth')->name('
 Route::middleware('auth')->group(function(){
     Route::get('/paiement', [PaiementController::class, 'index'])->name('paiement');
     Route::post('/paiement', [PaiementController::class, 'store'])->name('paiement.store');
-    Route::get('/attente', [PaiementController::class, 'attente'])->name('attente');
+    Route::get('/attente', [PaiementController::class, 'attent'])->name('attente');
 
     // show chapter page (only if user has a payment approved)
     Route::get('/chapitre/{id}', [ChapterController::class, 'show'])->name('chapitre.show');
